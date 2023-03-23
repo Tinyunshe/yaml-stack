@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: print-result
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: print
+      image: 192.168.15.156/devops/buildkit:v0.10.4-alpine-84b476e0
+      workingDir: $(workspaces.source.path)
+      script: |
+        echo $(results.ociContainerImageBuild-url.path)
