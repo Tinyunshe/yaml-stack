@@ -7,7 +7,7 @@ spec:
     - name: source
   steps:
     - name: print
-      image: 192.168.15.156/devops/buildkit:v0.10.4-alpine-84b476e0
+      image: tinyunshe/busybox:latest
       workingDir: $(workspaces.source.path)
       script: |
         echo $(results.ociContainerImageBuild-url.path)
