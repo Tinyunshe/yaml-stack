@@ -22,11 +22,14 @@ spec:
     - name: TOOL_IMAGE # 该镜像中必须要有 git，最好还有其他工具：比如make、sed、yq等，方便更新配置。
       description: The container image.
       default: tinyunshe/git:tekton-update-manifests-toargocd-yq
+    - name: IMAGE_NAME
+      description: before image build task results to name here, $(tasks.image-build.results.image-name)
+      default: ""
     - name: UPDATE_SCRIPT
       description: The script to run.
       type: string
       default: |
-        echo "hello world"
+        yq -i '.spec.template.spec.containers[0].image = $(params.IMAGE_NAME)' deployment.yaml
     - name: BASIC_AUTH
       description: The secret name for push git repository
       type: string
