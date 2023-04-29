@@ -56,8 +56,8 @@ spec:
           if [ "$(params.VERBOSE)" = "true" ] ; then
             set -x
           fi
-          if [];then
-            echo ${update_image_name}
+          if [ -n "$(params.UPDATE_IMAGE_NAME)" ];then
+            echo $(params.UPDATE_IMAGE_NAME)
           fi
           branch=$(params.GIT_BRANCH)
           branch=${branch#refs/heads/} # replace prefix `refs/heads/`
