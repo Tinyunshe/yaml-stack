@@ -22,6 +22,9 @@ spec:
     - name: TOOL_IMAGE # 该镜像中必须要有 git，最好还有其他工具：比如make、sed、yq等，方便更新配置。
       description: The container image.
       default: tinyunshe/git:tekton-update-manifests-toargocd-yq
+    - name: UPDATE_IMAGE_NAME
+      description: before stage new image name, example "$(tasks.image.results.ociContainerImageBuild-url)"
+      default: ""
     - name: UPDATE_SCRIPT
       description: The script to run.
       type: string
@@ -48,13 +51,13 @@ spec:
             secretKeyRef:
               name: $(params.BASIC_AUTH)
               key: password
-      command: ["/bin/bash"]
-      args:
-        - -c
-        - |
+      script: |
           set -eu
           if [ "$(params.VERBOSE)" = "true" ] ; then
             set -x
+          fi
+          if [];then
+            echo ${update_image_name}
           fi
           branch=$(params.GIT_BRANCH)
           branch=${branch#refs/heads/} # replace prefix `refs/heads/`
