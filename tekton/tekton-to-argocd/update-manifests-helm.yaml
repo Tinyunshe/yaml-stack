@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: update-manifests
+spec:
+  params:
+    - name: SCHEMA
+      default: http
+      description: Git repository schema, default is `http`.
+    - name: GIT_URL
+      description: Git repository containing manifest files to update
+    - name: GIT_BRANCH
+      default: master
+      description: Git repository branch, automatically created when the branch does not exist.
+    - name: GIT_EMAIL
+      default: your@email.com
+    - name: GIT_NAME
+      default: Your Name Here
+    - name: GIT_MANIFEST_DIR
+      description: Manifests files dir.
+      default: .
+    - name: TOOL_IMAGE # 该镜像中必须要有 git，最好还有其他工具：比如make、sed、yq等，方便更新配置。
+      description: The container image.
+      default: tinyunshe/git:tekton-update-manife
