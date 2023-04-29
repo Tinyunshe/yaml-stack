@@ -21,4 +21,60 @@ spec:
       default: .
     - name: TOOL_IMAGE # 该镜像中必须要有 git，最好还有其他工具：比如make、sed、yq等，方便更新配置。
       description: The container image.
-      default: tinyunshe/git:tekton-update-manife
+      default: tinyunshe/git:builder-tools-v1
+    - name: UPDATE_IMAGE_NAME
+      description: before stage new image name, example "$(tasks.image.results.ociContainerImageBuild-url)"
+      default: ""
+    - name: UPDATE_SCRIPT
+      description: The script to run.
+      type: string
+      default: |
+        yq -i '.spec.template.spec.containers[0].image = "$(tasks.image.results.ociContainerImageBuild-url)"' deployment.yaml
+    - name: BASIC_AUTH
+      description: The secret name for push git repository
+      type: string
+    - name: VERBOSE
+      description: Log the commands that are executed during operation.
+      type: string
+      default: "false"
+  steps:
+    - name: git-push
+      image: $(params.TOOL_IMAGE)
+      env:
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.BASIC_AUTH)
+              key: username
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.BASIC_AUTH)
+              key: password
+      script: |
+          set -eu
+          if [ "$(params.VERBOSE)" = "true" ] ; then
+            set -x
+          fi
+          if [ -n "$(params.UPDATE_IMAGE_NAME)" ];then
+            echo $(params.UPDATE_IMAGE_NAME)
+          fi
+          branch=$(params.GIT_BRANCH)
+          branch=${branch#refs/heads/} # replace prefix `refs/heads/`
+          git config --global user.email "$(params.GIT_EMAIL)"
+          git config --global user.name "$(params.GIT_NAME)"
+          git clone $(params.SCHEMA)://${GIT_USERNAME}:${GIT_PASSWORD}@$(params.GIT_URL) repo
+          cd repo
+          git checkout ${branch} || git checkout -b ${branch}
+          cd "$(params.GIT_MANIFEST_DIR)"
+          ls -l
+          $(params.UPDATE_SCRIPT)
+          if ! git diff --exit-code --quiet --; then
+            git status
+            git diff .
+            git add .
+            git commit -m "updated by tekton pipeline in update-manifests task"
+            git push --set-upstream origin ${branch}
+          else
+              echo "no changes, git repository is up to date"
+          fi
